@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101827">
+<title>Snake Infinity — Arcade</title>
+<style>
+:root{color-scheme:dark;--bg:#07131d;--panel:#102633;--green:#8cff98;--muted:#a9c3cc;--gold:#ffd166;--cyan:#5de4d4;--line:#27505a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% -10%,#235b61 0%,#102b3b 34%,var(--bg) 72%);color:#f4fbfc;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;justify-content:center;padding:14px 14px calc(24px + env(safe-area-inset-bottom));touch-action:manipulation;overflow-x:hidden}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.28;background-image:radial-gradient(circle at 12% 18%,#9effd9 0 1px,transparent 2px),radial-gradient(circle at 83% 31%,#5de4d4 0 1px,transparent 2px),radial-gradient(circle at 66% 78%,#9effd9 0 1px,transparent 2px),radial-gradient(circle at 24% 67%,#5de4d4 0 1px,transparent 2px);background-size:190px 190px,240px 240px,280px 280px,220px 220px}
+main{width:min(100%,480px);display:flex;flex-direction:column;gap:12px;position:relative;z-index:1;padding-bottom:8px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{margin:0;font-size:clamp(1.9rem,8vw,2.5rem);letter-spacing:-1.5px;text-shadow:0 0 24px #5de4d43d}h1 span{color:var(--cyan);text-shadow:0 0 18px #5de4d4a6}
+.sub{margin:1px 0 0;color:var(--muted);font-size:.85rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.stat,.panel{background:linear-gradient(145deg,#153442eF,#0d202cf5);border:1px solid var(--line);border-radius:17px;padding:12px;box-shadow:0 8px 24px #00000020,inset 0 1px #ffffff08;backdrop-filter:blur(8px)}
+.stat small{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.7px}
+.stat strong{font-size:1.18rem;color:#f4ffff;font-variant-numeric:tabular-nums}
+.gamewrap{position:relative;background:#07151e;border:1px solid #39717a;border-radius:22px;overflow:hidden;box-shadow:0 0 0 4px #5de4d40c,0 14px 36px #0007,inset 0 0 30px #5de4d40a}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1;touch-action:none;background:radial-gradient(circle,#102a31,#07151e 75%)}
+.overlay{position:absolute;inset:0;background:linear-gradient(145deg,#071a22eF,#07111df5);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;backdrop-filter:blur(7px)}.overlay:before{content:"🐍";font-size:3rem;filter:drop-shadow(0 0 16px #5de4d477);margin-bottom:8px;animation:floaty 3s ease-in-out infinite}.overlay h2{background:linear-gradient(90deg,#ffffff,#8cffc5,#5de4d4);color:transparent;background-clip:text;-webkit-background-clip:text;letter-spacing:-.5px}.overlay p{max-width:290px;line-height:1.45}.overlay .primary{min-width:170px;letter-spacing:.7px}@keyframes floaty{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7px) rotate(4deg)}}
+.overlay.hidden{display:none}.overlay h2{font-size:1.65rem;margin:0 0 6px}.overlay p{color:var(--muted);margin:0 0 15px}
+button{border:0;cursor:pointer;color:#f7fff8;font:inherit;font-weight:750;touch-action:manipulation}
+.primary{background:linear-gradient(135deg,#b2ffc4,#5de4d4);color:#07221e;padding:13px 22px;border-radius:14px;box-shadow:0 4px 0 #258d81,0 0 25px #5de4d42b;transition:transform .15s,filter .15s}.primary:active,.smallbtn:active,.upgrade:active,.dir:active{transform:translateY(2px);filter:brightness(1.12)}
+.sectionhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:800}
+.muted{color:var(--muted);font-size:.8rem;font-weight:500}
+.upgrades{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.upgrade{background:linear-gradient(145deg,#1a3b48,#102631);border:1px solid #2a5962;border-radius:14px;padding:11px;text-align:left;min-height:88px;display:flex;flex-direction:column;gap:5px;transition:transform .15s,border-color .15s,box-shadow .15s}.upgrade:not(:disabled):hover{border-color:#5de4d4;box-shadow:0 0 16px #5de4d418}.upgrade .name{color:#eafffa}
+.upgrade:disabled{opacity:.42;filter:saturate(.5)}
+.upgrade .name{font-size:.88rem}.upgrade .desc{font-size:.72rem;color:var(--muted);font-weight:500;line-height:1.25}.upgrade .cost{color:var(--gold);font-size:.78rem}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.smallbtn{background:linear-gradient(135deg,#214653,#15303c);border:1px solid #32616a;padding:8px 11px;border-radius:11px;font-size:.82rem}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,48px);gap:7px;max-width:240px;width:100%;align-self:center}
+.dir{border:1px solid #32636a;background:linear-gradient(145deg,#1b4650,#102b36);border-radius:14px;font-size:1.3rem;box-shadow:0 3px 0 #06131a,0 0 14px #5de4d40b;user-select:none;color:#a8ffeb}
+.up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}
+.note{text-align:center;font-size:.76rem;color:#89aab4}.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;position:sticky;bottom:8px;z-index:3;padding:6px;background:#071720df;border:1px solid #244a53;border-radius:17px;backdrop-filter:blur(12px);box-shadow:0 8px 28px #0005}.tab{background:transparent;color:#8fb0b8;border-radius:12px;padding:11px 8px;font-size:.88rem}.tab.active{background:linear-gradient(135deg,#1f5a60,#17404b);color:#dffff5;box-shadow:inset 0 0 0 1px #4fa89e}.hidden-section{display:none!important}.section-kicker{font-size:.68rem;letter-spacing:1.3px;text-transform:uppercase;color:var(--cyan);font-weight:850;margin-bottom:5px}
+@media(min-height:850px){main{gap:14px}}
+</style>
+</head>
+<body><main>
+<header><div><h1>Snake<span>∞</span></h1><p class="sub">ARCADE • ÉVOLUE • RECOMMENCE</p></div><button class="smallbtn" id="resetSave">Réinitialiser</button></header>
+<div class="stats">
+ <div class="stat"><small>🍎 Pommes</small><strong id="apples">0</strong></div>
+ <div class="stat"><small>🪙 Pièces</small><strong id="coins">0</strong></div>
+ <div class="stat"><small>🏆 Record</small><strong id="best">0</strong></div>
+</div>
+<div class="gamewrap"><canvas id="game" width="420" height="420"></canvas>
+ <div class="overlay" id="overlay"><h2 id="overlayTitle">Snake Incremental</h2><p id="overlayText">Mange des pommes, gagne des pièces et améliore ton serpent. Les améliorations restent après une partie !</p><button class="primary" id="start">JOUER</button></div>
+</div>
+<div class="panel" id="panel-evolution">
+ <div class="section-kicker">Ton compagnon</div><div class="sectionhead"><span>Évolution du serpent</span><span class="muted" id="evoName">Serpent vert</span></div>
+ <div class="row" style="margin-bottom:8px"><span class="muted" id="evoDesc">Une petite créature prête à grandir.</span><span id="evoIcon" style="font-size:1.6rem">🐍</span></div>
+ <div style="height:8px;background:#0b1220;border-radius:99px;overflow:hidden"><div id="evoBar" style="height:100%;width:0%;background:linear-gradient(90deg,#8cff98,#ffd166);border-radius:99px"></div></div>
+ <div class="muted" id="evoProgress" style="margin-top:5px">0 / 25 pommes pour la prochaine évolution</div>
+</div>
+<div class="panel hidden-section" id="panel-skills">
+ <div class="section-kicker">Spécialisations</div><div class="sectionhead"><span>Arbre de compétences</span><span class="muted">Débloque des bonus</span></div>
+ <div class="upgrades">
+  <button class="upgrade" data-skill="scavenger"><span class="name">🌿 Glouton</span><span class="desc">Chaque pomme donne +1 pièce.</span><span class="cost" id="skill-scavenger">Coût : 100 pièces</span></button>
+  <button class="upgrade" data-skill="swift"><span class="name">⚡ Réflexes</span><span class="desc">Le serpent démarre plus rapide.</span><span class="cost" id="skill-swift">Coût : 150 pièces</span></button>
+  <button class="upgrade" data-skill="lucky"><span class="name">✨ Chance</span><span class="desc">Augmente les chances de pomme rare.</span><span class="cost" id="skill-lucky">Coût : 200 pièces</span></button>
+  <button class="upgrade" data-skill="rich"><span class="name">💰 Intérêts</span><span class="desc">La récolte automatique rapporte davantage.</span><span class="cost" id="skill-rich">Coût : 250 pièces</span></button>
+ </div>
+</div>
+<div class="panel hidden-section" id="panel-upgrades">
+ <div class="section-kicker">Atelier</div><div class="sectionhead"><span>Améliorations</span><span class="muted" id="multiplier">Gain ×1</span></div>
+ <div class="upgrades">
+  <button class="upgrade" data-up="value"><span class="name">🍎 Pomme premium <b id="lv-value">Nv. 0</b></span><span class="desc">Plus de pièces par pomme.</span><span class="cost" id="cost-value">Coût : 10</span></button>
+  <button class="upgrade" data-up="magnet"><span class="name">🧲 Aimant gourmand <b id="lv-magnet">Nv. 0</b></span><span class="desc">Bonus de pièces à chaque pomme.</span><span class="cost" id="cost-magnet">Coût : 25</span></button>
+  <button class="upgrade" data-up="length"><span class="name">🐍 Corps renforcé <b id="lv-length">Nv. 0</b></span><span class="desc">Commence chaque partie plus long, bonus permanent.</span><span class="cost" id="cost-length">Coût : 40</span></button>
+  <button class="upgrade" data-up="offline"><span class="name">⏱️ Récolte auto <b id="lv-offline">Nv. 0</b></span><span class="desc">Gagne des pièces avec le temps, même hors partie.</span><span class="cost" id="cost-offline">Coût : 60</span></button>
+ </div>
+ <div class="row" style="margin-top:10px"><span class="muted" id="passive">Production passive : 0 pièce/min</span><button class="smallbtn" id="prestige">Prestige : 0 pommes</button></div>
+ <p class="muted" id="prestigeInfo" style="margin:7px 0 0">Atteins 500 pommes cumulées pour débloquer le prestige.</p>
+</div>
+<nav class="tabs" aria-label="Menu principal"><button class="tab active" data-tab="game">🎮 Partie</button><button class="tab" data-tab="upgrades">✨ Atelier & talents</button></nav>
+<div class="controls">
+<button class="dir up" data-dir="up" aria-label="Haut">▲</button><button class="dir left" data-dir="left" aria-label="Gauche">◀</button><button class="dir down" data-dir="down" aria-label="Bas">▼</button><button class="dir right" data-dir="right" aria-label="Droite">▶</button>
+</div>
+<div class="note">Flèches, WASD ou glisse le doigt. Les pièces et améliorations persistent.</div>
+</main>
+<script>
+(()=> {
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),N=21,CELL=20;
+const $=id=>document.getElementById(id);
+const defaults={coins:0,apples:0,totalApples:0,best:0,prestige:0,levels:{value:0,magnet:0,length:0,offline:0},skills:{scavenger:false,swift:false,lucky:false,rich:false},rareFound:0,last:Date.now()};
+let save;
+try{save={...defaults,...JSON.parse(localStorage.getItem('snakeIncSave')||'{}')};save.levels={...defaults.levels,...(save.levels||{})};save.skills={...defaults.skills,...(save.skills||{})}}catch(e){save={...defaults,levels:{...defaults.levels},skills:{...defaults.skills}}}
+let snake,dir,nextDir,food,score=0,alive=false,paused=false,started=false,last=0,acc=0,step=145,rareFruit=false;
+const costs={value:10,magnet:25,length:40,offline:60};
+const fmt=n=>Math.floor(n).toLocaleString('fr-FR');
+function cost(k){return Math.floor(costs[k]*Math.pow(1.65,save.levels[k]))}
+function mult(){return (1+save.levels.value)*(1+save.prestige*.25)}
+function passive(){return save.levels.offline*0.5*(1+save.prestige*.25)*(save.skills.rich?2:1)}
+const skillCosts={scavenger:100,swift:150,lucky:200,rich:250};
+function evo(){const n=save.totalApples;if(n>=2500)return {name:'Dragon cosmique',icon:'🐉',desc:'Une légende vivante !',next:2500};if(n>=1000)return {name:'Serpent astral',icon:'🌌',desc:'Les étoiles brillent sur tes écailles.',next:2500};if(n>=500)return {name:'Serpent doré',icon:'🐍✨',desc:'Tes écailles scintillent.',next:1000};if(n>=200)return {name:'Vipère électrique',icon:'⚡🐍',desc:'Rapide et pleine d’énergie.',next:500};if(n>=50)return {name:'Serpent émeraude',icon:'💚🐍',desc:'Ton serpent devient plus rare.',next:200};return {name:'Serpent vert',icon:'🐍',desc:'Une petite créature prête à grandir.',next:50}}
+function updateEvolution(){const e=evo(),base=e.next===50?0:e.next===200?50:e.next===500?200:e.next===1000?500:e.next===2500?1000:2500;const pct=e.next===2500&&save.totalApples>=2500?100:Math.max(0,Math.min(100,(save.totalApples-base)/(e.next-base)*100));$('evoName').textContent=e.name;$('evoIcon').textContent=e.icon;$('evoDesc').textContent=e.desc;$('evoBar').style.width=pct+'%';$('evoProgress').textContent=save.totalApples>=2500?'Évolution maximale atteinte !':fmt(save.totalApples)+' / '+fmt(e.next)+' pommes cumulées'}
+
+function persist(){save.last=Date.now();try{localStorage.setItem('snakeIncSave',JSON.stringify(save))}catch(e){}}
+function ui(){
+ $('apples').textContent=fmt(save.totalApples);$('coins').textContent=fmt(save.coins);$('best').textContent=fmt(save.best);
+ $('multiplier').textContent='Gain ×'+mult().toFixed(2);
+ for(const k of Object.keys(costs)){$('lv-'+k).textContent='Nv. '+save.levels[k];$('cost-'+k).textContent='Coût : '+fmt(cost(k));document.querySelector('[data-up="'+k+'"]').disabled=save.coins<cost(k)}
+ $('passive').textContent='Production passive : '+passive().toFixed(1)+' pièce/min';
+ for(const k of Object.keys(skillCosts)){$('skill-'+k).textContent=save.skills[k]?'Compétence débloquée ✓':'Coût : '+skillCosts[k]+' pièces';document.querySelector('[data-skill="'+k+'"]').disabled=save.skills[k]||save.coins<skillCosts[k]}
+ updateEvolution();
+ $('prestigeInfo').textContent=save.totalApples>=500?'Prêt ! Le prestige réinitialise les pièces et améliorations, mais augmente les gains.':'Encore '+fmt(500-save.totalApples)+' pommes cumulées pour débloquer le prestige.';
+ $('prestige').disabled=save.totalApples<500;
+}
+function offlineEarnings(){const now=Date.now(),seconds=Math.max(0,Math.min(8*3600,(now-(save.last||now))/1000));const gain=seconds/60*passive();if(gain>=1){save.coins+=Math.floor(gain);persist()}save.last=now}
+function placeFood(){let p;do{p={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N)}}while(snake.some(s=>s.x===p.x&&s.y===p.y));return p}
+function rounded(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+let pulse=0,particles=[];
+function burst(x,y,color){for(let i=0;i<13;i++){const a=Math.random()*Math.PI*2,sp=0.7+Math.random()*2.3;particles.push({x:(x+.5)*CELL,y:(y+.5)*CELL,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,color})}}
+function draw(){
+ pulse+=0.045;
+ const bg=ctx.createRadialGradient(210,210,10,210,210,300);bg.addColorStop(0,'#10303a');bg.addColorStop(1,'#06131d');ctx.fillStyle=bg;ctx.fillRect(0,0,420,420);
+ // Subtle luminous grid and ambient fireflies
+ ctx.strokeStyle='#1a3b43';ctx.lineWidth=1;for(let i=0;i<=N;i++){ctx.globalAlpha=(i%3===0)?.58:.23;ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,420);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*CELL);ctx.lineTo(420,i*CELL);ctx.stroke()}ctx.globalAlpha=1;
+ for(let i=0;i<18;i++){const x=(i*83+37)%420,y=(i*137+Math.floor(pulse*14+i*5))%420;ctx.globalAlpha=.12+.15*(.5+.5*Math.sin(pulse+i));ctx.fillStyle='#75ffe0';ctx.beginPath();ctx.arc(x,y,1.2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+ // Fruit aura, stem and shine
+ const fx=(food.x+.5)*CELL,fy=(food.y+.53)*CELL,fr=7+Math.sin(pulse*2.4)*.7;
+ ctx.save();ctx.shadowColor=rareFruit?'#ffd166':'#ff617a';ctx.shadowBlur=rareFruit?23:15;ctx.fillStyle=rareFruit?'#ffc94a':'#ff526e';ctx.beginPath();ctx.arc(fx,fy,fr,0,Math.PI*2);ctx.fill();ctx.restore();
+ ctx.fillStyle=rareFruit?'#fff0a6':'#ff9cae';ctx.beginPath();ctx.ellipse(fx-2.3,fy-2.2,2.1,3.1,-.55,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#9dffad';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(fx,fy-5);ctx.quadraticCurveTo(fx+1,fy-10,fx+5,fy-9);ctx.stroke();
+ // Serpent body with soft glow and scale highlights
+ snake.forEach((s,i)=>{const pad=i===0?1.7:2.6,x=s.x*CELL+pad,y=s.y*CELL+pad,w=CELL-pad*2,h=CELL-pad*2;const hue=Math.max(0,Math.min(1,1-i/Math.max(8,snake.length)));const grad=ctx.createLinearGradient(x,y,x+w,y+h);grad.addColorStop(0,i===0?'#d5ffe2':`hsl(${153-hue*22} 88% ${62-hue*17}%)`);grad.addColorStop(1,i===0?'#5de4d4':`hsl(${166-hue*16} 76% ${35-hue*9}%)`);ctx.fillStyle=grad;ctx.shadowColor=i===0?'#5de4d4':'#2affaa';ctx.shadowBlur=i===0?13:3;rounded(x,y,w,h,i===0?7:5);ctx.shadowBlur=0;
+ if(i>0&&i%2===0){ctx.fillStyle='#d9fff0';ctx.globalAlpha=.35;ctx.beginPath();ctx.arc(x+w*.35,y+h*.32,1.2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
+ if(i===0){let ex=x+w*.63,ey=y+h*.31,ex2=x+w*.63,ey2=y+h*.70;if(dir.x===1){ex=x+w*.70;ex2=x+w*.70;ey=y+h*.28;ey2=y+h*.68}else if(dir.x===-1){ex=x+w*.30;ex2=x+w*.30;ey=y+h*.28;ey2=y+h*.68}else if(dir.y===-1){ex=x+w*.3;ex2=x+w*.7;ey=y+h*.3;ey2=y+h*.3}else{ex=x+w*.3;ex2=x+w*.7;ey=y+h*.7;ey2=y+h*.7}ctx.fillStyle='#f6ffff';ctx.beginPath();ctx.arc(ex,ey,2.2,0,Math.PI*2);ctx.arc(ex2,ey2,2.2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#09232a';ctx.beginPath();ctx.arc(ex+dir.x*.7,ey+dir.y*.7,1,0,Math.PI*2);ctx.arc(ex2+dir.x*.7,ey2+dir.y*.7,1,0,Math.PI*2);ctx.fill()}
+ });
+ particles=particles.filter(p=>p.life>0);for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.vy+=.025;p.life-=.035;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,2.2*p.life,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+}
+function overlay(t,p,b){$('overlayTitle').textContent=t;$('overlayText').textContent=p;$('start').textContent=b;$('overlay').classList.remove('hidden')}
+function hide(){ $('overlay').classList.add('hidden') }
+function resetRound(){
+ const len=3+Math.min(7,save.levels.length);snake=[];for(let i=0;i<len;i++)snake.push({x:Math.max(0,10-i),y:10});
+ dir={x:1,y:0};nextDir={x:1,y:0};score=0;step=145;food=placeFood();rareFruit=Math.random()<(0.08+(save.skills.lucky?0.12:0));draw();
+}
+function end(){alive=false;started=false;save.best=Math.max(save.best,score);persist();ui();overlay('Fin de partie !','Score : '+score+' pommes. Tes améliorations sont conservées.','REJOUER')}
+function tick(){
+ dir=nextDir;const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+ if(h.x<0||h.x>=N||h.y<0||h.y>=N){end();return}
+ const eat=h.x===food.x&&h.y===food.y,wasRare=rareFruit,body=eat?snake:snake.slice(0,-1);
+ if(body.some(s=>s.x===h.x&&s.y===h.y)){end();return}
+ snake.unshift(h);
+ if(eat){burst(h.x,h.y,wasRare?'#ffd166':'#5de4d4');score++;save.apples++;save.totalApples++;const rare=wasRare;const earned=Math.max(1,Math.floor(mult()+save.levels.magnet+(save.skills.scavenger?1:0)))*(rare?5:1);save.coins+=earned;if(rare)save.rareFound++;food=placeFood();rareFruit=Math.random()<(0.08+(save.skills.lucky?0.12:0));step=Math.max(75,(save.skills.swift?125:145)-Math.floor(score/5)*4);ui();persist();if(rare){$('overlayTitle').textContent='✨ Pomme rare !';$('overlayText').textContent='Super trouvaille : '+earned+' pièces !';$('overlay').classList.remove('hidden');setTimeout(()=>{if(alive&&!paused)hide()},850)}}else snake.pop();
+ draw();
+}
+function setDir(d){if(!alive||paused)return;const ds={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}},n=ds[d];if(n&&!(n.x===-dir.x&&n.y===-dir.y))nextDir=n}
+document.querySelectorAll('[data-dir]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();setDir(b.dataset.dir)}));
+document.addEventListener('keydown',e=>{const m={ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right'};if(m[e.key]){e.preventDefault();setDir(m[e.key])}if(e.key===' '){e.preventDefault();togglePause()}});
+let sx=0,sy=0;canvas.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY});canvas.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<18)return;setDir(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'))});
+function start(){resetRound();alive=true;paused=false;started=true;last=0;acc=0;hide()}
+function togglePause(){if(!started)return;paused=!paused;if(paused)overlay('Pause','Ta progression est sauvegardée.','REPRENDRE');else{hide();last=0}}
+$('start').addEventListener('click',()=>{if(started&&paused){paused=false;hide();last=0}else start()});
+document.querySelectorAll('[data-up]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.up,c=cost(k);if(save.coins<c)return;save.coins-=c;save.levels[k]++;persist();ui()}));
+document.querySelectorAll('[data-skill]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.skill,c=skillCosts[k];if(save.skills[k]||save.coins<c)return;save.coins-=c;save.skills[k]=true;persist();ui()}));
+$('prestige').addEventListener('click',()=>{if(save.totalApples<500)return;save.prestige++;save.coins=0;save.levels={value:0,magnet:0,length:0,offline:0};save.skills={scavenger:false,swift:false,lucky:false,rich:false};persist();ui();overlay('Prestige !','Tes gains sont maintenant '+mult().toFixed(2)+'× plus élevés. Lance une nouvelle partie !','JOUER')});
+$('resetSave').addEventListener('click',()=>{if(confirm('Effacer toute la progression et le record ?')){save={...defaults,levels:{...defaults.levels}};persist();ui();resetRound();alive=false;started=false;overlay('Nouvelle aventure','Progression réinitialisée.','JOUER')}});
+function loop(ts){if(!last)last=ts;const delta=Math.min(ts-last,100);last=ts;if(alive&&!paused){acc+=delta;if(acc>=step){acc=0;tick()}}requestAnimationFrame(loop)}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{const tab=b.dataset.tab;document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('panel-evolution').classList.toggle('hidden-section',tab!=='game');$('panel-skills').classList.toggle('hidden-section',tab!=='upgrades');$('panel-upgrades').classList.toggle('hidden-section',tab!=='upgrades');if(tab==='upgrades')$('panel-skills').scrollIntoView({behavior:'smooth',block:'start'});else $('game').scrollIntoView({behavior:'smooth',block:'center'})}));
+offlineEarnings();ui();resetRound();requestAnimationFrame(loop);
+})();
+</script></body></html>
